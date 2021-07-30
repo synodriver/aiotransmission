@@ -826,7 +826,7 @@ class _BaseTransmissionClient:
         await self.close()
 
 
-class TransmissonClient(_BaseTransmissionClient):
+class TransmissionClient(_BaseTransmissionClient):
     def __init__(self, username: Optional[str] = None,
                  password: Optional[str] = None,
                  url: Optional[str] = DEFAULT_HOST,
