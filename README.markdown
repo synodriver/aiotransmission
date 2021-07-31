@@ -1,5 +1,11 @@
 # aiotr
 
+[![pypi](https://img.shields.io/pypi/v/aiotr.svg)](https://pypi.org/project/aiotr/)
+![python](https://img.shields.io/pypi/pyversions/aiotr)
+![implementation](https://img.shields.io/pypi/implementation/aiotr)
+![wheel](https://img.shields.io/pypi/wheel/aiotr)
+![license](https://img.shields.io/github/license/synodriver/aiotransmission.svg)
+
 ## The transmission python client with asyncio support
 
 ### simple usage
