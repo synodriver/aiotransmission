@@ -26,3 +26,21 @@ class TransmissionConnectException(BaseTransmissionException):
 
     def __str__(self):
         return '{}: {}'.format(self.__class__.__name__, self.msg)
+
+
+class TransmissionMisdirectedException(BaseTransmissionException):
+    def __init__(self, msg: str):
+        super().__init__(msg)
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class TransmissionUnauthorizedException(BaseTransmissionException):
+    def __init__(self, msg: str):
+        super().__init__(msg)
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg

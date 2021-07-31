@@ -11,7 +11,10 @@ from typing_extensions import Literal
 
 from aiotr.typing import Request, Response, TagFactory
 from aiotr.utils import DEFAULT_JSON_DECODER, DEFAULT_JSON_ENCODER, DEFAULT_HOST, DEFAULT_TIMEOUT, TagGen
-from aiotr.exception import TransmissionException, TransmissionConnectException
+from aiotr.exception import (TransmissionException,
+                             TransmissionConnectException,
+                             TransmissionMisdirectedException,
+                             TransmissionUnauthorizedException)
 
 
 class _BaseTransmissionClient:
@@ -24,7 +27,7 @@ class _BaseTransmissionClient:
                  ):
         self.username = username
         self.password = password
-        auth = f"{username}{password}@" if (username or password) else ""
+        auth = f"{username}:{password}@" if (username or password) else ""
         parsed = urlparse(url)
 
         self.url: str = urlunparse(parsed) if not auth else urlunparse(
@@ -373,18 +376,18 @@ class _BaseTransmissionClient:
         return await self.rpc("torrent-get", arguments)
 
     # 3.4 Adding a Torrent
-    async def torrent_add(self, cookies: str,
-                          download_dir: str,
-                          filename: str,
-                          metainfo: str,
-                          paused: bool,
-                          peer_limit: int,
-                          bandwidthPriority: int,
-                          files_wanted: List[str],
-                          files_unwanted: List[str],
-                          priority_high: List[str],
-                          priority_low: List[str],
-                          priority_normal: List[str]):
+    async def torrent_add(self, cookies: Optional[str] = None,
+                          download_dir: Optional[str] = None,
+                          filename: Optional[str] = None,
+                          metainfo: Optional[str] = None,
+                          paused: Optional[bool] = None,
+                          peer_limit: Optional[int] = None,
+                          bandwidthPriority: Optional[int] = None,
+                          files_wanted: Optional[List[str]] = None,
+                          files_unwanted: Optional[List[str]] = None,
+                          priority_high: Optional[List[str]] = None,
+                          priority_low: Optional[List[str]] = None,
+                          priority_normal: Optional[List[str]] = None):
         """
 
         :param cookies:               pointer to a string of one or more cookies.
@@ -461,7 +464,7 @@ class _BaseTransmissionClient:
     async def torrent_rename_path(self, path: str,
                                   name: str,
                                   ids: Optional[
-                                      Union[int, List[Union[int, str]], Literal["recently-active"]]] = None, ):
+                                      Union[int, List[Union[int, str]], Literal["recently-active"]]] = None):
         """
                  For more information on the use of this function, see the transmission.h
            documentation of tr_torrentRenamePath(). In particular, note that if this
@@ -835,7 +838,7 @@ class TransmissionClient(_BaseTransmissionClient):
                  **kwargs):
         super().__init__(username, password, url, tag)
         self.timeout = timeout
-        self.headers = {"X-Transmission-Session-Id": "", "Host": ""}  # todo need update and verify
+        self.headers = {"X-Transmission-Session-Id": "", "Host": "localhost"}  # todo need update and verify
         self.client_session = aiohttp.ClientSession()
 
         self.kwargs = kwargs  # 用于session.post
@@ -847,7 +850,7 @@ class TransmissionClient(_BaseTransmissionClient):
         return self.headers.get("Host")
 
     @host.setter  # type: ignore
-    def set_host(self, host: str):
+    def host(self, host: str):
         self.headers.update(Host=host)
 
     @property
@@ -855,7 +858,7 @@ class TransmissionClient(_BaseTransmissionClient):
         return self.headers.get("X-Transmission-Session-Id")
 
     @session_id.setter  # type: ignore
-    def set_session_id(self, session_id: str):
+    def session_id(self, session_id: str):
         self.headers.update({"X-Transmission-Session-Id": session_id})
 
     async def send_request(self, request: Request) -> Union[dict, NoReturn, None]:
@@ -871,9 +874,14 @@ class TransmissionClient(_BaseTransmissionClient):
                                                     headers=self.headers,
                                                     timeout=self.timeout,
                                                     **self.kwargs) as resp:
+                    if "X-Transmission-Session-Id" in resp.headers:
+                        self.session_id = resp.headers["X-Transmission-Session-Id"]
                     if resp.status == 409:
-                        self.session_id = resp.headers["X-Transmission-Session-Id"]  # type: ignore
                         continue
+                    elif resp.status == 421:
+                        raise TransmissionMisdirectedException(await resp.text())
+                    elif resp.status == 401:
+                        raise TransmissionUnauthorizedException(await resp.text())
                     try:
                         data: Response = await resp.json(loads=self.loads)
                         if data["tag"] != request["tag"]:
