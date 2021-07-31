@@ -839,11 +839,10 @@ class TransmissionClient(_BaseTransmissionClient):
         super().__init__(username, password, url, tag)
         self.timeout = timeout
         self.headers = {"X-Transmission-Session-Id": "", "Host": "localhost"}  # todo need update and verify
-        self.client_session = aiohttp.ClientSession()
-
         self.kwargs = kwargs  # 用于session.post
         self.loads = self.kwargs.pop("loads") if "loads" in self.kwargs else DEFAULT_JSON_DECODER  # json serialize
         self.dumps = self.kwargs.pop("dumps") if "dumps" in self.kwargs else DEFAULT_JSON_ENCODER
+        self.client_session = aiohttp.ClientSession(json_serialize=self.dumps)
 
     @property
     def host(self):

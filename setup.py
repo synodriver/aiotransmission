@@ -28,7 +28,7 @@ def main():
     setup(
         name="aiotr",
         version=version,
-        url="https://github.com/synodriver/aiotr",
+        url="https://github.com/synodriver/aiotransmission",
         packages=packages,
         keywords=["asyncio", "transmission"],
         description="Support transmission rpc client and manage server with async/await",
