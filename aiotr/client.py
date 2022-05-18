@@ -30,9 +30,21 @@ class _BaseTransmissionClient:
         auth = f"{username}:{password}@" if (username or password) else ""
         parsed = urlparse(url)
 
-        self.url: str = urlunparse(parsed) if not auth else urlunparse(
-            (parsed.scheme, auth + parsed.netloc, parsed.path, parsed.params, parsed.query,  # type: ignore
-             parsed.fragment))  # type: ignore
+        self.url: str = (
+            urlunparse(
+                (
+                    parsed.scheme,
+                    auth + parsed.netloc,
+                    parsed.path,
+                    parsed.params,
+                    parsed.query,  # type: ignore
+                    parsed.fragment,
+                )
+            )
+            if auth
+            else urlunparse(parsed)
+        )
+
         self.tag = tag if tag is not None else TagGen()
 
     # 3. Torrent Requests
@@ -869,10 +881,10 @@ class TransmissionClient(_BaseTransmissionClient):
         while True:
             try:
                 async with self.client_session.post(self.url,
-                                                    json=request,
-                                                    headers=self.headers,
-                                                    timeout=self.timeout,
-                                                    **self.kwargs) as resp:
+                                                                json=request,
+                                                                headers=self.headers,
+                                                                timeout=self.timeout,
+                                                                **self.kwargs) as resp:
                     if "X-Transmission-Session-Id" in resp.headers:
                         self.session_id = resp.headers["X-Transmission-Session-Id"]
                     if resp.status == 409:
@@ -884,13 +896,12 @@ class TransmissionClient(_BaseTransmissionClient):
                     try:
                         data: Response = await resp.json(loads=self.loads)
                         if data["tag"] != request["tag"]:
-                            raise TransmissionException('unexpected tag: {}'.format(data["tag"]))
+                            raise TransmissionException(f'unexpected tag: {data["tag"]}')
                         if data["result"] != "success":
-                            raise TransmissionException('unexpected result: {}'.format(data))
+                            raise TransmissionException(f'unexpected result: {data}')
                         return data["arguments"]
-                    # 没有result就是异常
                     except KeyError:
-                        raise TransmissionException('unexpected result: {}'.format(data))
+                        raise TransmissionException(f'unexpected result: {data}')
             except aiohttp.ClientConnectionError as err:
                 raise TransmissionConnectException(str(err)) from err
 
