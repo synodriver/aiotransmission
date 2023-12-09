@@ -7,6 +7,7 @@ class BaseTransmissionException(Exception):
     """
     transmission errors
     """
+
     pass
 
 
@@ -16,7 +17,7 @@ class TransmissionException(BaseTransmissionException):
         self.msg = msg
 
     def __str__(self):
-        return '{}: {}'.format(self.__class__.__name__, self.msg)
+        return "{}: {}".format(self.__class__.__name__, self.msg)
 
 
 class TransmissionConnectException(BaseTransmissionException):
@@ -25,7 +26,7 @@ class TransmissionConnectException(BaseTransmissionException):
         self.msg = msg
 
     def __str__(self):
-        return '{}: {}'.format(self.__class__.__name__, self.msg)
+        return "{}: {}".format(self.__class__.__name__, self.msg)
 
 
 class TransmissionMisdirectedException(BaseTransmissionException):

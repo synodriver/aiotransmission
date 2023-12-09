@@ -1,8 +1,9 @@
 """
 Copyright (c) 2008-2021 synodriver <synodriver@gmail.com>
 """
-from typing import Optional, Union, Callable
-from typing_extensions import TypedDict, Literal
+from typing import Callable, Optional, Union
+
+from typing_extensions import Literal, TypedDict
 
 
 class Request(TypedDict):
