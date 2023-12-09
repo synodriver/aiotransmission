@@ -3,7 +3,7 @@ Copyright (c) 2008-2021 synodriver <synodriver@gmail.com>
 """
 from typing import Callable, Optional, Union
 
-from typing_extensions import Literal, TypedDict
+from typing import Literal, TypedDict
 
 
 class Request(TypedDict):
