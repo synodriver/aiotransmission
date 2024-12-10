@@ -1,6 +1,7 @@
 """
-Copyright (c) 2008-2021 synodriver <synodriver@gmail.com>
+Copyright (c) 2008-2024 synodriver <synodriver@gmail.com>
 """
+
 import unittest
 from pprint import pprint
 from unittest import IsolatedAsyncioTestCase

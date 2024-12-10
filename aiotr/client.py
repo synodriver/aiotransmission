@@ -1,6 +1,7 @@
 """
-Copyright (c) 2008-2021 synodriver <synodriver@gmail.com>
+Copyright (c) 2008-2024 synodriver <synodriver@gmail.com>
 """
+
 from typing import List, NoReturn, Optional, Union
 from urllib.parse import quote, urlparse, urlunparse
 
@@ -945,6 +946,7 @@ class _BaseTransmissionClient:
         """
         arguments = {"group": group}
         return await self.rpc("group-get", arguments)
+
     # 5.0.  Protocol Versions
 
     async def rpc(self, method: str, arguments: dict):
@@ -972,11 +974,15 @@ class TransmissionClient(_BaseTransmissionClient):
         password: Optional[str] = None,
         url: Optional[str] = DEFAULT_HOST,
         tag: Optional[TagFactory] = None,
-        timeout: Union[int, float] = DEFAULT_TIMEOUT,
+        timeout: Union[int, float, aiohttp.ClientTimeout] = DEFAULT_TIMEOUT,
         **kwargs,
     ):
         super().__init__(username, password, url, tag)
-        self.timeout = timeout
+        self.timeout = (
+            aiohttp.ClientTimeout(total=timeout)
+            if isinstance(timeout, (int, float))
+            else timeout
+        )
         self.headers = {
             "X-Transmission-Session-Id": "",
             "Host": "localhost",
@@ -1030,7 +1036,7 @@ class TransmissionClient(_BaseTransmissionClient):
                     elif resp.status == 401:
                         raise TransmissionUnauthorizedException(await resp.text())
                     try:
-                        data: Response = await resp.json(loads=self.loads)
+                        data: Response = self.loads(await resp.text())
                         if data["tag"] != request["tag"]:
                             raise TransmissionException(
                                 "unexpected tag: {}".format(data["tag"])
